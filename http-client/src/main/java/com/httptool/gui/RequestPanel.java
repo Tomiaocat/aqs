@@ -60,6 +60,9 @@ public class RequestPanel extends JPanel {
         addHeaderBtn.setFocusPainted(false);
         addHeaderBtn.setOpaque(true);
         addHeaderBtn.setContentAreaFilled(true);
+        addHeaderBtn.setBorderPainted(false); // 移除边框
+        addHeaderBtn.setFont(new Font(addHeaderBtn.getFont().getName(), Font.BOLD, 12));
+        addHeaderBtn.setPreferredSize(new Dimension(120, 30));
         addHeaderBtn.addActionListener(e -> addHeaderRow("", ""));
         headersContainer.add(addHeaderBtn, BorderLayout.SOUTH);
 
