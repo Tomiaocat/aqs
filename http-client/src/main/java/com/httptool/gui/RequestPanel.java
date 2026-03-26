@@ -56,13 +56,7 @@ public class RequestPanel extends JPanel {
         headersContainer.add(headersScroll, BorderLayout.CENTER);
 
         JButton addHeaderBtn = new JButton("添加请求头");
-        addHeaderBtn.setBackground(new Color(0, 120, 212)); // 蓝色背景
-        addHeaderBtn.setForeground(Color.WHITE); // 白色字体
-        addHeaderBtn.setFocusPainted(false);
-        addHeaderBtn.setOpaque(true);
-        addHeaderBtn.setContentAreaFilled(true);
-        addHeaderBtn.setBorderPainted(false); // 移除边框
-        addHeaderBtn.setFont(new Font(addHeaderBtn.getFont().getName(), Font.BOLD, 12));
+        addHeaderBtn.putClientProperty("JButton.buttonType", "primary");
         addHeaderBtn.setPreferredSize(new Dimension(120, 30));
         addHeaderBtn.addActionListener(e -> addHeaderRow("", ""));
         headersContainer.add(addHeaderBtn, BorderLayout.SOUTH);
@@ -111,14 +105,8 @@ public class RequestPanel extends JPanel {
         JButton loadTemplateBtn = new JButton("加载模板");
         JButton formatJsonBtn = new JButton("格式化 JSON");
 
-        // 格式化按钮样式 - 蓝色背景，白色字体
-        formatJsonBtn.setBackground(new Color(0, 120, 212));
-        formatJsonBtn.setForeground(Color.WHITE);
-        formatJsonBtn.setFocusPainted(false);
-        formatJsonBtn.setOpaque(true);
-        formatJsonBtn.setContentAreaFilled(true);
-        formatJsonBtn.setBorderPainted(false);
-        formatJsonBtn.setFont(new Font(formatJsonBtn.getFont().getName(), Font.BOLD, 12));
+        // 格式化按钮使用 FlatLaf 主按钮样式
+        formatJsonBtn.putClientProperty("JButton.buttonType", "primary");
 
         saveTemplateBtn.addActionListener(e -> saveTemplate());
         loadTemplateBtn.addActionListener(e -> loadTemplate());
@@ -143,16 +131,10 @@ public class RequestPanel extends JPanel {
         JScrollPane cipherScroll = new JScrollPane(encryptedBodyArea);
         cipherPanel.add(cipherScroll, BorderLayout.CENTER);
 
-        // 复制密文按钮
+        // 复制密文按钮 - 使用 FlatLaf 主按钮样式
         JPanel cipherButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton copyCipherBtn = new JButton("复制密文");
-        copyCipherBtn.setBackground(new Color(0, 120, 212));
-        copyCipherBtn.setForeground(Color.WHITE);
-        copyCipherBtn.setFocusPainted(false);
-        copyCipherBtn.setOpaque(true);
-        copyCipherBtn.setContentAreaFilled(true);
-        copyCipherBtn.setBorderPainted(false);
-        copyCipherBtn.setFont(new Font(copyCipherBtn.getFont().getName(), Font.BOLD, 12));
+        copyCipherBtn.putClientProperty("JButton.buttonType", "primary");
         copyCipherBtn.addActionListener(e -> copyToClipboard(encryptedBodyArea.getText()));
         cipherButtonPanel.add(copyCipherBtn);
         cipherPanel.add(cipherButtonPanel, BorderLayout.SOUTH);

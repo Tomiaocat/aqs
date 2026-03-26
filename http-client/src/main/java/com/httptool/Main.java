@@ -1,6 +1,7 @@
 package com.httptool;
 
 import com.httptool.gui.MainFrame;
+import com.formdev.flatlaf.FlatIntelliJLaf;
 import javax.swing.*;
 import java.awt.*;
 
@@ -13,10 +14,9 @@ public class Main {
         System.setProperty("sun.java2d.uiScale", "1.0");
         System.setProperty("sun.java2d.dpiaware", "true");
 
-        // 设置系统外观（跨平台一致）
+        // 设置 FlatLaf 主题（跨平台一致，IntelliJ风格）
         try {
-            // 使用系统默认外观
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            UIManager.setLookAndFeel(new FlatIntelliJLaf());
 
             // 设置全局字体抗锯齿
             System.setProperty("awt.useSystemAAFontSettings", "on");

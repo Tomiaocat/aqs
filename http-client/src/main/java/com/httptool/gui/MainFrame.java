@@ -134,30 +134,11 @@ public class MainFrame extends JFrame {
         gbc.weightx = 0.67;  // 缩短三分之一
         topPanel.add(urlField, gbc);
 
-        // 发送按钮 - 蓝色背景，白色字体，带点击效果
+        // 发送按钮 - 使用 FlatLaf 主按钮样式
         JButton sendButton = new JButton("发送请求");
-        Color normalColor = new Color(0, 120, 212);
-        Color pressedColor = new Color(0, 90, 160);
-        sendButton.setBackground(normalColor);
-        sendButton.setForeground(Color.WHITE);
-        sendButton.setFocusPainted(false);
-        sendButton.setOpaque(true);
-        sendButton.setContentAreaFilled(true);
-        sendButton.setBorderPainted(false);
-        sendButton.setPreferredSize(new Dimension(120, 35));
+        sendButton.putClientProperty("JButton.buttonType", "primary");
         sendButton.setFont(new Font(sendButton.getFont().getName(), Font.BOLD, 14));
-
-        // 添加点击效果
-        sendButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mousePressed(java.awt.event.MouseEvent e) {
-                sendButton.setBackground(pressedColor);
-            }
-            @Override
-            public void mouseReleased(java.awt.event.MouseEvent e) {
-                sendButton.setBackground(normalColor);
-            }
-        });
+        sendButton.setPreferredSize(new Dimension(120, 35));
 
         sendButton.addActionListener(e -> sendRequestFromTopPanel());
         gbc.gridx = 4;

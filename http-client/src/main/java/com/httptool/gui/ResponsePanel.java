@@ -49,16 +49,10 @@ public class ResponsePanel extends JPanel {
         JScrollPane plainScroll = new JScrollPane(plainTextArea);
         plainPanel.add(plainScroll, BorderLayout.CENTER);
 
-        // 格式化按钮
+        // 格式化按钮 - 使用 FlatLaf 主按钮样式
         JPanel formatPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton formatPlainBtn = new JButton("格式化 JSON");
-        formatPlainBtn.setBackground(new Color(0, 120, 212));
-        formatPlainBtn.setForeground(Color.WHITE);
-        formatPlainBtn.setFocusPainted(false);
-        formatPlainBtn.setOpaque(true);
-        formatPlainBtn.setContentAreaFilled(true);
-        formatPlainBtn.setBorderPainted(false);
-        formatPlainBtn.setFont(new Font(formatPlainBtn.getFont().getName(), Font.BOLD, 12));
+        formatPlainBtn.putClientProperty("JButton.buttonType", "primary");
         formatPlainBtn.addActionListener(e -> formatPlainText());
         formatPanel.add(formatPlainBtn);
         plainPanel.add(formatPanel, BorderLayout.SOUTH);
