@@ -39,14 +39,31 @@ public class ResponsePanel extends JPanel {
         JScrollPane cipherScroll = new JScrollPane(cipherTextArea);
         tabbedPane.addTab("密文(Base64)", cipherScroll);
 
-        // 明文标签页
+        // 明文标签页 - 带格式化按钮
+        JPanel plainPanel = new JPanel(new BorderLayout());
         plainTextArea = new JTextArea();
         plainTextArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         plainTextArea.setEditable(false);
         plainTextArea.setLineWrap(true);
         plainTextArea.setWrapStyleWord(true);
         JScrollPane plainScroll = new JScrollPane(plainTextArea);
-        tabbedPane.addTab("明文(JSON)", plainScroll);
+        plainPanel.add(plainScroll, BorderLayout.CENTER);
+
+        // 格式化按钮
+        JPanel formatPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton formatPlainBtn = new JButton("格式化 JSON");
+        formatPlainBtn.setBackground(new Color(0, 120, 212));
+        formatPlainBtn.setForeground(Color.WHITE);
+        formatPlainBtn.setFocusPainted(false);
+        formatPlainBtn.setOpaque(true);
+        formatPlainBtn.setContentAreaFilled(true);
+        formatPlainBtn.setBorderPainted(false);
+        formatPlainBtn.setFont(new Font(formatPlainBtn.getFont().getName(), Font.BOLD, 12));
+        formatPlainBtn.addActionListener(e -> formatPlainText());
+        formatPanel.add(formatPlainBtn);
+        plainPanel.add(formatPanel, BorderLayout.SOUTH);
+
+        tabbedPane.addTab("明文(JSON)", plainPanel);
 
         // JSON树标签页
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Response");
@@ -75,10 +92,11 @@ public class ResponsePanel extends JPanel {
         // 显示密文
         cipherTextArea.setText(response.getBody());
 
-        // 显示明文
+        // 显示明文（自动尝试格式化）
         String decryptedBody = response.getDecryptedBody();
         if (decryptedBody != null) {
-            plainTextArea.setText(decryptedBody);
+            String formatted = tryFormatJson(decryptedBody);
+            plainTextArea.setText(formatted);
             // 更新JSON树
             updateJsonTree(decryptedBody);
         } else {
@@ -163,5 +181,43 @@ public class ResponsePanel extends JPanel {
         cipherTextArea.setText("");
         plainTextArea.setText("");
         statusLabel.setText("就绪");
+    }
+
+    /**
+     * 尝试格式化 JSON，如果失败则返回原文
+     */
+    private String tryFormatJson(String text) {
+        if (text == null || text.trim().isEmpty()) {
+            return text;
+        }
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            Object json = mapper.readValue(text, Object.class);
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+        } catch (Exception e) {
+            // 无法格式化，返回原文
+            return text;
+        }
+    }
+
+    /**
+     * 手动格式化明文区的 JSON
+     */
+    private void formatPlainText() {
+        String text = plainTextArea.getText();
+        if (text == null || text.trim().isEmpty()) {
+            return;
+        }
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            Object json = mapper.readValue(text, Object.class);
+            String formatted = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+            plainTextArea.setText(formatted);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "JSON 格式错误: " + e.getMessage(),
+                "格式化失败",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 }
