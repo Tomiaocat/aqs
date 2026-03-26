@@ -45,8 +45,10 @@ public class RequestPanel extends JPanel {
         headersPanel = new JPanel();
         headersPanel.setLayout(new BoxLayout(headersPanel, BoxLayout.Y_AXIS));
 
-        // 添加默认的Content-Type头
+        // 添加常用请求头
         addHeaderRow("Content-Type", "application/json");
+        addHeaderRow("Accept", "application/json");
+        addHeaderRow("X-invc-env-flag", "new");
 
         JScrollPane headersScroll = new JScrollPane(headersPanel);
         headersScroll.setPreferredSize(new Dimension(0, 120));
@@ -87,7 +89,7 @@ public class RequestPanel extends JPanel {
 
         bodyArea = new JTextArea(12, 40);
         bodyArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        bodyArea.setText("{\n  \"id\": 1,\n  \"name\": \"张三\",\n  \"age\": 25\n}");
+        bodyArea.setText("{\"shopStatus\":\"\"}");
         JScrollPane bodyScroll = new JScrollPane(bodyArea);
         bodyPanel.add(bodyScroll, BorderLayout.CENTER);
 
