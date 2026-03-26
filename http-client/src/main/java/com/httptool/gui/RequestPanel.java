@@ -101,14 +101,28 @@ public class RequestPanel extends JPanel {
         JScrollPane bodyScroll = new JScrollPane(bodyArea);
         bodyPanel.add(bodyScroll, BorderLayout.CENTER);
 
-        // 模板按钮
+        // 模板按钮和格式化按钮
         JPanel templatePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton saveTemplateBtn = new JButton("保存模板");
         JButton loadTemplateBtn = new JButton("加载模板");
+        JButton formatJsonBtn = new JButton("格式化 JSON");
+
+        // 格式化按钮样式 - 蓝色背景，白色字体
+        formatJsonBtn.setBackground(new Color(0, 120, 212));
+        formatJsonBtn.setForeground(Color.WHITE);
+        formatJsonBtn.setFocusPainted(false);
+        formatJsonBtn.setOpaque(true);
+        formatJsonBtn.setContentAreaFilled(true);
+        formatJsonBtn.setBorderPainted(false);
+        formatJsonBtn.setFont(new Font(formatJsonBtn.getFont().getName(), Font.BOLD, 12));
+
         saveTemplateBtn.addActionListener(e -> saveTemplate());
         loadTemplateBtn.addActionListener(e -> loadTemplate());
+        formatJsonBtn.addActionListener(e -> formatJsonBody());
+
         templatePanel.add(saveTemplateBtn);
         templatePanel.add(loadTemplateBtn);
+        templatePanel.add(formatJsonBtn);
         bodyPanel.add(templatePanel, BorderLayout.SOUTH);
 
         add(bodyPanel, BorderLayout.CENTER);
@@ -193,5 +207,25 @@ public class RequestPanel extends JPanel {
         mainFrame.setUrl(requestData.getUrl());
         bodyArea.setText(requestData.getBody());
         keyField.setText(requestData.getKey());
+    }
+
+    private void formatJsonBody() {
+        String text = bodyArea.getText();
+        if (text == null || text.trim().isEmpty()) {
+            return;
+        }
+
+        try {
+            // 使用 Jackson 解析和格式化 JSON
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Object json = mapper.readValue(text, Object.class);
+            String formatted = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+            bodyArea.setText(formatted);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "JSON 格式错误: " + e.getMessage(),
+                "格式化失败",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 }
