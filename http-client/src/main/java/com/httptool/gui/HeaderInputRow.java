@@ -20,6 +20,12 @@ public class HeaderInputRow extends JPanel {
         deleteButton = new JButton("X");
         deleteButton.setPreferredSize(new Dimension(40, 25));
         deleteButton.setMargin(new Insets(0, 0, 0, 0));
+        deleteButton.setBackground(new Color(255, 105, 180)); // 粉红色背景
+        deleteButton.setForeground(Color.WHITE); // 白色字体
+        deleteButton.setFocusPainted(false);
+        deleteButton.setOpaque(true);
+        deleteButton.setContentAreaFilled(true);
+        deleteButton.setBorderPainted(false);
 
         deleteButton.addActionListener(e -> {
             parent.remove(this);

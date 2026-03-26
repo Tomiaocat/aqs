@@ -131,7 +131,7 @@ public class MainFrame extends JFrame {
         urlField.setPreferredSize(new Dimension(0, 35));
         urlField.setFont(new Font(urlField.getFont().getName(), Font.PLAIN, 14));
         gbc.gridx = 3;
-        gbc.weightx = 1.0;
+        gbc.weightx = 0.67;  // 缩短三分之一
         topPanel.add(urlField, gbc);
 
         // 发送按钮 - 蓝色背景，白色字体

@@ -55,6 +55,11 @@ public class RequestPanel extends JPanel {
         headersContainer.add(headersScroll, BorderLayout.CENTER);
 
         JButton addHeaderBtn = new JButton("添加请求头");
+        addHeaderBtn.setBackground(new Color(0, 120, 212)); // 蓝色背景
+        addHeaderBtn.setForeground(Color.WHITE); // 白色字体
+        addHeaderBtn.setFocusPainted(false);
+        addHeaderBtn.setOpaque(true);
+        addHeaderBtn.setContentAreaFilled(true);
         addHeaderBtn.addActionListener(e -> addHeaderRow("", ""));
         headersContainer.add(addHeaderBtn, BorderLayout.SOUTH);
 
