@@ -85,9 +85,26 @@ public class ResponsePanel extends JPanel {
     }
 
     public void displayResponse(HttpResponseData response) {
+        int statusCode = response.getStatusCode();
+
         // 更新状态
         statusLabel.setText(String.format("状态码: %d | 耗时: %d ms | 大小: %d bytes",
-            response.getStatusCode(), response.getDuration(), response.getBody().length()));
+            statusCode, response.getDuration(), response.getBody().length()));
+
+        // 根据状态码设置边框颜色
+        Color borderColor;
+        if (statusCode == 200) {
+            borderColor = new Color(34, 139, 34); // 绿色
+        } else {
+            borderColor = new Color(220, 20, 60); // 红色
+        }
+
+        // 创建带颜色的边框
+        javax.swing.border.Border coloredBorder = BorderFactory.createLineBorder(borderColor, 3);
+        tabbedPane.setBorder(BorderFactory.createCompoundBorder(
+            coloredBorder,
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
 
         // 显示密文
         cipherTextArea.setText(response.getBody());
