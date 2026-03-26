@@ -28,9 +28,13 @@ public class MainFrame extends JFrame {
     private HistoryStorage historyStorage;
     private TemplateStorage templateStorage;
 
+    // 顶部组件（延伸到右侧）
+    private JComboBox<String> methodCombo;
+    private JTextField urlField;
+
     public MainFrame() {
         setTitle("HTTP加密通信工具");
-        setSize(1200, 800);
+        setSize(1400, 900);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -47,10 +51,17 @@ public class MainFrame extends JFrame {
         setLayout(new BorderLayout(10, 10));
         ((JPanel) getContentPane()).setBorder(new EmptyBorder(10, 10, 10, 10));
 
+        // 顶部面板 - URL和方法（延伸到整个宽度）
+        JPanel topPanel = createTopPanel();
+        add(topPanel, BorderLayout.NORTH);
+
+        // 中间主面板
+        JPanel centerPanel = new JPanel(new BorderLayout(10, 10));
+
         // 创建左侧面板（请求配置）
         requestPanel = new RequestPanel(this);
         requestPanel.setPreferredSize(new Dimension(500, 0));
-        add(requestPanel, BorderLayout.WEST);
+        centerPanel.add(requestPanel, BorderLayout.WEST);
 
         // 创建右侧面板（响应和历史）
         JPanel rightPanel = new JPanel(new BorderLayout(10, 10));
@@ -76,7 +87,77 @@ public class MainFrame extends JFrame {
         historyPanel.setPreferredSize(new Dimension(0, 200));
         rightPanel.add(historyPanel, BorderLayout.SOUTH);
 
-        add(rightPanel, BorderLayout.CENTER);
+        centerPanel.add(rightPanel, BorderLayout.CENTER);
+        add(centerPanel, BorderLayout.CENTER);
+    }
+
+    private JPanel createTopPanel() {
+        JPanel topPanel = new JPanel(new GridBagLayout());
+        topPanel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createEtchedBorder(),
+            "请求地址",
+            TitledBorder.LEFT,
+            TitledBorder.TOP
+        ));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.BOTH;
+
+        // 方法选择 - 高度增加1.7倍（约35像素）
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0;
+        gbc.weighty = 1.0;
+        topPanel.add(new JLabel("方法:"), gbc);
+
+        String[] methods = {"GET", "POST", "PUT", "PATCH", "DELETE"};
+        methodCombo = new JComboBox<>(methods);
+        methodCombo.setSelectedItem("POST");
+        methodCombo.setPreferredSize(new Dimension(100, 35));
+        methodCombo.setFont(new Font(methodCombo.getFont().getName(), Font.PLAIN, 14));
+        gbc.gridx = 1;
+        gbc.weightx = 0.1;
+        topPanel.add(methodCombo, gbc);
+
+        // URL输入
+        gbc.gridx = 2;
+        gbc.weightx = 0;
+        topPanel.add(new JLabel("URL:"), gbc);
+
+        urlField = new JTextField();
+        urlField.setText("http://localhost:8080/api/user");
+        urlField.setHorizontalAlignment(JTextField.CENTER); // 文字居中
+        urlField.setPreferredSize(new Dimension(0, 35));
+        urlField.setFont(new Font(urlField.getFont().getName(), Font.PLAIN, 14));
+        gbc.gridx = 3;
+        gbc.weightx = 1.0;
+        topPanel.add(urlField, gbc);
+
+        // 发送按钮 - 蓝色背景，白色字体
+        JButton sendButton = new JButton("发送请求");
+        sendButton.setBackground(new Color(0, 120, 212));
+        sendButton.setForeground(Color.WHITE);
+        sendButton.setFocusPainted(false);
+        sendButton.setOpaque(true);
+        sendButton.setContentAreaFilled(true);
+        sendButton.setBorderPainted(false);
+        sendButton.setPreferredSize(new Dimension(120, 35));
+        sendButton.setFont(new Font(sendButton.getFont().getName(), Font.BOLD, 14));
+        sendButton.addActionListener(e -> sendRequestFromTopPanel());
+        gbc.gridx = 4;
+        gbc.weightx = 0;
+        topPanel.add(sendButton, gbc);
+
+        return topPanel;
+    }
+
+    private void sendRequestFromTopPanel() {
+        // 从RequestPanel获取其他数据
+        HttpRequestData requestData = requestPanel.collectRequestData();
+        requestData.setMethod((String) methodCombo.getSelectedItem());
+        requestData.setUrl(urlField.getText().trim());
+        sendRequest(requestData);
     }
 
     private void initMenuBar() {
@@ -191,5 +272,21 @@ public class MainFrame extends JFrame {
 
     public RequestPanel getRequestPanel() {
         return requestPanel;
+    }
+
+    public void setMethod(String method) {
+        methodCombo.setSelectedItem(method);
+    }
+
+    public void setUrl(String url) {
+        urlField.setText(url);
+    }
+
+    public String getMethod() {
+        return (String) methodCombo.getSelectedItem();
+    }
+
+    public String getUrl() {
+        return urlField.getText();
     }
 }

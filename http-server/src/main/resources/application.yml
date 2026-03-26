@@ -5,11 +5,11 @@ spring:
   application:
     name: http-encryption-server
 
-# 加密配置
+# 加密配置 - 已禁用全局拦截，改为在Controller中手动处理
 api:
   encrypt:
     key: your-secret-key-here  # 与服务端约定的密钥
-    enabled: true              # 是否启用加密
+    enabled: false             # 禁用全局加密拦截
 
 # 日志配置
 logging:

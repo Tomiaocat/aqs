@@ -16,8 +16,6 @@ import java.util.Map;
  */
 public class RequestPanel extends JPanel {
     private MainFrame mainFrame;
-    private JComboBox<String> methodCombo;
-    private JTextField urlField;
     private JTextField keyField;
     private JTextArea bodyArea;
     private JPanel headersPanel;
@@ -37,50 +35,8 @@ public class RequestPanel extends JPanel {
     }
 
     private void initComponents() {
-        // 顶部面板 - URL和方法
-        JPanel topPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        // 方法选择
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 0;
-        topPanel.add(new JLabel("方法:"), gbc);
-
-        String[] methods = {"GET", "POST", "PUT", "PATCH", "DELETE"};
-        methodCombo = new JComboBox<>(methods);
-        methodCombo.setSelectedItem("POST");
-        gbc.gridx = 1;
-        gbc.weightx = 0.2;
-        topPanel.add(methodCombo, gbc);
-
-        // URL输入
-        gbc.gridx = 2;
-        gbc.weightx = 0;
-        topPanel.add(new JLabel("URL:"), gbc);
-
-        urlField = new JTextField(30);
-        urlField.setText("http://localhost:8080/api/user");
-        gbc.gridx = 3;
-        gbc.weightx = 0.8;
-        topPanel.add(urlField, gbc);
-
-        // 发送按钮
-        JButton sendButton = new JButton("发送请求");
-        sendButton.setBackground(new Color(0, 120, 212));
-        sendButton.setForeground(Color.WHITE);
-        sendButton.setFocusPainted(false);
-        sendButton.addActionListener(e -> sendRequest());
-        gbc.gridx = 4;
-        gbc.weightx = 0;
-        topPanel.add(sendButton, gbc);
-
-        add(topPanel, BorderLayout.NORTH);
-
-        // 中间面板 - 请求头和密钥
-        JPanel middlePanel = new JPanel(new BorderLayout(10, 10));
+        // 上部面板 - 请求头和密钥
+        JPanel topPanel = new JPanel(new BorderLayout(10, 10));
 
         // Headers面板
         JPanel headersContainer = new JPanel(new BorderLayout());
@@ -93,14 +49,14 @@ public class RequestPanel extends JPanel {
         addHeaderRow("Content-Type", "application/json");
 
         JScrollPane headersScroll = new JScrollPane(headersPanel);
-        headersScroll.setPreferredSize(new Dimension(0, 100));
+        headersScroll.setPreferredSize(new Dimension(0, 120));
         headersContainer.add(headersScroll, BorderLayout.CENTER);
 
         JButton addHeaderBtn = new JButton("添加请求头");
         addHeaderBtn.addActionListener(e -> addHeaderRow("", ""));
         headersContainer.add(addHeaderBtn, BorderLayout.SOUTH);
 
-        middlePanel.add(headersContainer, BorderLayout.CENTER);
+        topPanel.add(headersContainer, BorderLayout.CENTER);
 
         // 密钥面板
         JPanel keyPanel = new JPanel(new GridBagLayout());
@@ -116,19 +72,20 @@ public class RequestPanel extends JPanel {
 
         keyField = new JTextField(20);
         keyField.setText("your-secret-key-here");
+        keyField.setPreferredSize(new Dimension(0, 30));
         keyGbc.gridx = 1;
         keyGbc.weightx = 1.0;
         keyPanel.add(keyField, keyGbc);
 
-        middlePanel.add(keyPanel, BorderLayout.SOUTH);
+        topPanel.add(keyPanel, BorderLayout.SOUTH);
 
-        add(middlePanel, BorderLayout.CENTER);
+        add(topPanel, BorderLayout.NORTH);
 
-        // 底部面板 - 请求体
+        // 中间面板 - 请求体
         JPanel bodyPanel = new JPanel(new BorderLayout());
         bodyPanel.setBorder(BorderFactory.createTitledBorder("请求体 (JSON格式)"));
 
-        bodyArea = new JTextArea(10, 40);
+        bodyArea = new JTextArea(12, 40);
         bodyArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         bodyArea.setText("{\n  \"id\": 1,\n  \"name\": \"张三\",\n  \"age\": 25\n}");
         JScrollPane bodyScroll = new JScrollPane(bodyArea);
@@ -144,7 +101,7 @@ public class RequestPanel extends JPanel {
         templatePanel.add(loadTemplateBtn);
         bodyPanel.add(templatePanel, BorderLayout.SOUTH);
 
-        add(bodyPanel, BorderLayout.SOUTH);
+        add(bodyPanel, BorderLayout.CENTER);
     }
 
     private void addHeaderRow(String name, String value) {
@@ -167,16 +124,13 @@ public class RequestPanel extends JPanel {
         return headers;
     }
 
-    private void sendRequest() {
+    public HttpRequestData collectRequestData() {
         HttpRequestData requestData = new HttpRequestData();
-        requestData.setMethod((String) methodCombo.getSelectedItem());
-        requestData.setUrl(urlField.getText().trim());
         requestData.setHeaders(getHeaders());
         requestData.setBody(bodyArea.getText());
         requestData.setKey(keyField.getText());
         requestData.setTimestamp(System.currentTimeMillis());
-
-        mainFrame.sendRequest(requestData);
+        return requestData;
     }
 
     private void saveTemplate() {
@@ -184,8 +138,8 @@ public class RequestPanel extends JPanel {
         if (name != null && !name.trim().isEmpty()) {
             RequestTemplate template = new RequestTemplate();
             template.setName(name);
-            template.setMethod((String) methodCombo.getSelectedItem());
-            template.setUrl(urlField.getText());
+            template.setMethod(mainFrame.getMethod());
+            template.setUrl(mainFrame.getUrl());
             template.setBody(bodyArea.getText());
             template.setKey(keyField.getText());
             template.setHeaders(getHeaders());
@@ -214,8 +168,8 @@ public class RequestPanel extends JPanel {
         if (selected != null) {
             for (RequestTemplate template : templates) {
                 if (template.getName().equals(selected)) {
-                    methodCombo.setSelectedItem(template.getMethod());
-                    urlField.setText(template.getUrl());
+                    mainFrame.setMethod(template.getMethod());
+                    mainFrame.setUrl(template.getUrl());
                     bodyArea.setText(template.getBody());
                     keyField.setText(template.getKey());
                     break;
@@ -225,8 +179,8 @@ public class RequestPanel extends JPanel {
     }
 
     public void loadFromHistory(HttpRequestData requestData) {
-        methodCombo.setSelectedItem(requestData.getMethod());
-        urlField.setText(requestData.getUrl());
+        mainFrame.setMethod(requestData.getMethod());
+        mainFrame.setUrl(requestData.getUrl());
         bodyArea.setText(requestData.getBody());
         keyField.setText(requestData.getKey());
     }
