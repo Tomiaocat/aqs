@@ -223,15 +223,17 @@ public class MainFrame extends JFrame {
 
     public void sendRequest(HttpRequestData requestData) {
         new SwingWorker<HttpResponseData, Void>() {
+            private String encryptedRequestBody;
+
             @Override
             protected HttpResponseData doInBackground() throws Exception {
                 HttpClient client = new HttpClient();
 
                 // 加密请求体
                 String requestBody = requestData.getBody();
-                String encryptedBody = null;
+                encryptedRequestBody = null;
                 if (requestBody != null && !requestBody.trim().isEmpty()) {
-                    encryptedBody = AesUtil.encryptJsonValues(requestBody, requestData.getKey());
+                    encryptedRequestBody = AesUtil.encryptJsonValues(requestBody, requestData.getKey());
                 }
 
                 // 发送请求
@@ -239,7 +241,7 @@ public class MainFrame extends JFrame {
                     requestData.getMethod(),
                     requestData.getUrl(),
                     requestData.getHeaders(),
-                    encryptedBody
+                    encryptedRequestBody
                 );
 
                 // 解密响应体
@@ -260,6 +262,8 @@ public class MainFrame extends JFrame {
             protected void done() {
                 try {
                     HttpResponseData response = get();
+                    // 显示加密后的请求体
+                    requestPanel.setEncryptedBody(encryptedRequestBody);
                     responsePanel.displayResponse(response);
                     historyStorage.addHistory(requestData, response);
                     historyPanel.refreshHistory();

@@ -18,6 +18,7 @@ public class RequestPanel extends JPanel {
     private MainFrame mainFrame;
     private JTextField keyField;
     private JTextArea bodyArea;
+    private JTextArea encryptedBodyArea;
     private JPanel headersPanel;
     private java.util.List<HeaderInputRow> headerRows = new java.util.ArrayList<>();
 
@@ -91,11 +92,14 @@ public class RequestPanel extends JPanel {
 
         add(topPanel, BorderLayout.NORTH);
 
-        // 中间面板 - 请求体
+        // 中间面板 - 请求体和密文
+        JPanel bodyContainer = new JPanel(new BorderLayout(0, 10));
+
+        // 请求体面板
         JPanel bodyPanel = new JPanel(new BorderLayout());
         bodyPanel.setBorder(BorderFactory.createTitledBorder("请求体 (JSON格式)"));
 
-        bodyArea = new JTextArea(12, 40);
+        bodyArea = new JTextArea(8, 40);
         bodyArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         bodyArea.setText("{\"shopStatus\":\"\"}");
         JScrollPane bodyScroll = new JScrollPane(bodyArea);
@@ -125,7 +129,37 @@ public class RequestPanel extends JPanel {
         templatePanel.add(formatJsonBtn);
         bodyPanel.add(templatePanel, BorderLayout.SOUTH);
 
-        add(bodyPanel, BorderLayout.CENTER);
+        bodyContainer.add(bodyPanel, BorderLayout.CENTER);
+
+        // 请求体密文面板
+        JPanel cipherPanel = new JPanel(new BorderLayout());
+        cipherPanel.setBorder(BorderFactory.createTitledBorder("请求体密文 (Base64)"));
+
+        encryptedBodyArea = new JTextArea(4, 40);
+        encryptedBodyArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        encryptedBodyArea.setEditable(false);
+        encryptedBodyArea.setLineWrap(true);
+        encryptedBodyArea.setWrapStyleWord(true);
+        JScrollPane cipherScroll = new JScrollPane(encryptedBodyArea);
+        cipherPanel.add(cipherScroll, BorderLayout.CENTER);
+
+        // 复制密文按钮
+        JPanel cipherButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton copyCipherBtn = new JButton("复制密文");
+        copyCipherBtn.setBackground(new Color(0, 120, 212));
+        copyCipherBtn.setForeground(Color.WHITE);
+        copyCipherBtn.setFocusPainted(false);
+        copyCipherBtn.setOpaque(true);
+        copyCipherBtn.setContentAreaFilled(true);
+        copyCipherBtn.setBorderPainted(false);
+        copyCipherBtn.setFont(new Font(copyCipherBtn.getFont().getName(), Font.BOLD, 12));
+        copyCipherBtn.addActionListener(e -> copyToClipboard(encryptedBodyArea.getText()));
+        cipherButtonPanel.add(copyCipherBtn);
+        cipherPanel.add(cipherButtonPanel, BorderLayout.SOUTH);
+
+        bodyContainer.add(cipherPanel, BorderLayout.SOUTH);
+
+        add(bodyContainer, BorderLayout.CENTER);
     }
 
     private void addHeaderRow(String name, String value) {
@@ -226,6 +260,31 @@ public class RequestPanel extends JPanel {
                 "JSON 格式错误: " + e.getMessage(),
                 "格式化失败",
                 JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * 设置加密后的请求体显示
+     */
+    public void setEncryptedBody(String encryptedBody) {
+        if (encryptedBodyArea != null) {
+            encryptedBodyArea.setText(encryptedBody != null ? encryptedBody : "");
+        }
+    }
+
+    /**
+     * 清空密文显示
+     */
+    public void clearEncryptedBody() {
+        if (encryptedBodyArea != null) {
+            encryptedBodyArea.setText("");
+        }
+    }
+
+    private void copyToClipboard(String text) {
+        if (text != null && !text.isEmpty()) {
+            java.awt.datatransfer.StringSelection selection = new java.awt.datatransfer.StringSelection(text);
+            java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
         }
     }
 }
