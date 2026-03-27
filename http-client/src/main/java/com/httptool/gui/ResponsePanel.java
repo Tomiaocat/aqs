@@ -68,14 +68,30 @@ public class ResponsePanel extends JPanel {
 
         // 数据表格标签页
         JPanel dataPanel = new JPanel(new BorderLayout());
+
+        // 顶部工具栏 - 状态标签和导出按钮
+        JPanel dataToolbar = new JPanel(new BorderLayout());
         dataStatusLabel = new JLabel("暂无数据");
         dataStatusLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        dataPanel.add(dataStatusLabel, BorderLayout.NORTH);
+        dataToolbar.add(dataStatusLabel, BorderLayout.WEST);
+
+        JButton exportBtn = new JButton("导出为CSV");
+        exportBtn.putClientProperty("JButton.buttonType", "primary");
+        exportBtn.addActionListener(e -> exportToCsv());
+        JPanel exportPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        exportPanel.add(exportBtn);
+        dataToolbar.add(exportPanel, BorderLayout.EAST);
+
+        dataPanel.add(dataToolbar, BorderLayout.NORTH);
 
         dataTableModel = new DefaultTableModel();
         dataTable = new JTable(dataTableModel);
         dataTable.setFont(new Font("Monospaced", Font.PLAIN, 12));
         dataTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        // 显示网格线
+        dataTable.setShowGrid(true);
+        dataTable.setGridColor(Color.LIGHT_GRAY);
+        dataTable.setIntercellSpacing(new Dimension(1, 1));
         JScrollPane dataScroll = new JScrollPane(dataTable);
         dataPanel.add(dataScroll, BorderLayout.CENTER);
 
@@ -435,5 +451,90 @@ public class ResponsePanel extends JPanel {
 
             table.getColumnModel().getColumn(column).setPreferredWidth(width);
         }
+    }
+
+    /**
+     * 导出表格数据为CSV文件
+     */
+    private void exportToCsv() {
+        if (dataTableModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this,
+                "没有数据可导出",
+                "导出失败",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // 选择保存路径
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("导出CSV文件");
+        fileChooser.setSelectedFile(new java.io.File("data_export.csv"));
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("CSV文件 (*.csv)", "csv"));
+
+        int result = fileChooser.showSaveDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        java.io.File file = fileChooser.getSelectedFile();
+        // 确保文件扩展名为.csv
+        String filePath = file.getAbsolutePath();
+        if (!filePath.toLowerCase().endsWith(".csv")) {
+            filePath += ".csv";
+            file = new java.io.File(filePath);
+        }
+
+        try (java.io.PrintWriter writer = new java.io.PrintWriter(new java.io.OutputStreamWriter(
+                new java.io.FileOutputStream(file), java.nio.charset.StandardCharsets.UTF_8))) {
+
+            // 写入BOM，解决Excel打开中文乱码问题
+            writer.write('\ufeff');
+
+            // 写入表头
+            int columnCount = dataTableModel.getColumnCount();
+            StringBuilder header = new StringBuilder();
+            for (int i = 0; i < columnCount; i++) {
+                if (i > 0) header.append(",");
+                header.append(escapeCsv(dataTableModel.getColumnName(i)));
+            }
+            writer.println(header.toString());
+
+            // 写入数据行
+            int rowCount = dataTableModel.getRowCount();
+            for (int row = 0; row < rowCount; row++) {
+                StringBuilder line = new StringBuilder();
+                for (int col = 0; col < columnCount; col++) {
+                    if (col > 0) line.append(",");
+                    Object value = dataTableModel.getValueAt(row, col);
+                    line.append(escapeCsv(value != null ? value.toString() : ""));
+                }
+                writer.println(line.toString());
+            }
+
+            JOptionPane.showMessageDialog(this,
+                "导出成功:\n" + file.getAbsolutePath() + "\n共 " + rowCount + " 条记录",
+                "导出完成",
+                JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "导出失败: " + e.getMessage(),
+                "错误",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * 转义CSV特殊字符
+     */
+    private String escapeCsv(String value) {
+        if (value == null) {
+            return "";
+        }
+        // 如果包含逗号、引号或换行符，需要用引号包围并转义内部引号
+        if (value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
     }
 }
