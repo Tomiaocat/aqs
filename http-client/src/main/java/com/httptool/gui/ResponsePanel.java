@@ -133,13 +133,19 @@ public class ResponsePanel extends JPanel {
             // 更新JSON树
             updateJsonTree(decryptedBody);
             // 更新数据表格
-            updateDataTable(decryptedBody);
+            boolean hasData = updateDataTable(decryptedBody);
+
+            // 智能切换标签页：有数据表 -> 数据标签，否则 -> 明文标签
+            if (hasData) {
+                tabbedPane.setSelectedIndex(2); // "数据" 标签页
+            } else {
+                tabbedPane.setSelectedIndex(1); // "明文(JSON)" 标签页
+            }
         } else {
             plainTextArea.setText("解密失败");
+            // 解密失败，显示密文标签页
+            tabbedPane.setSelectedIndex(0); // "密文(AES+Base64)" 标签页
         }
-
-        // 自动切换到明文标签页
-        tabbedPane.setSelectedIndex(1);
     }
 
     private void updateJsonTree(String json) {
@@ -258,14 +264,15 @@ public class ResponsePanel extends JPanel {
 
     /**
      * 更新数据表格，从JSON响应中提取data字段并以表格形式展示
+     * @return true 如果成功解析并展示了数据，false 否则
      */
-    private void updateDataTable(String json) {
+    private boolean updateDataTable(String json) {
         dataTableModel.setRowCount(0);
         dataTableModel.setColumnCount(0);
 
         if (json == null || json.trim().isEmpty()) {
             dataStatusLabel.setText("响应为空");
-            return;
+            return false;
         }
 
         try {
@@ -275,17 +282,17 @@ public class ResponsePanel extends JPanel {
 
             if (dataNode == null) {
                 dataStatusLabel.setText("响应中未找到data字段");
-                return;
+                return false;
             }
 
             if (!dataNode.isArray()) {
                 dataStatusLabel.setText("data字段不是数组类型");
-                return;
+                return false;
             }
 
             if (dataNode.size() == 0) {
                 dataStatusLabel.setText("data数组为空");
-                return;
+                return false;
             }
 
             // 收集所有列名（从所有Map中合并）
@@ -301,7 +308,7 @@ public class ResponsePanel extends JPanel {
 
             if (columns.isEmpty()) {
                 dataStatusLabel.setText("data数组中没有对象数据");
-                return;
+                return false;
             }
 
             // 设置表头
@@ -329,8 +336,11 @@ public class ResponsePanel extends JPanel {
             // 自动调整列宽
             autoResizeColumns(dataTable);
 
+            return true;
+
         } catch (Exception e) {
             dataStatusLabel.setText("解析失败: " + e.getMessage());
+            return false;
         }
     }
 
