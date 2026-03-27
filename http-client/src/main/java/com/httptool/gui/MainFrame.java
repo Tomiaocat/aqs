@@ -6,6 +6,7 @@ import com.httptool.http.HttpClient;
 import com.httptool.crypto.AesUtil;
 import com.httptool.storage.HistoryStorage;
 import com.httptool.storage.KeyStorage;
+import com.httptool.storage.SettingsStorage;
 import com.httptool.storage.TemplateStorage;
 import com.httptool.model.RequestTemplate;
 import com.httptool.dialog.KeyManagerDialog;
@@ -27,6 +28,7 @@ public class MainFrame extends JFrame {
     private KeyStorage keyStorage;
     private HistoryStorage historyStorage;
     private TemplateStorage templateStorage;
+    private SettingsStorage settingsStorage;
 
     // 顶部组件（延伸到右侧）
     private JComboBox<String> methodCombo;
@@ -42,6 +44,7 @@ public class MainFrame extends JFrame {
         keyStorage = new KeyStorage();
         historyStorage = new HistoryStorage();
         templateStorage = new TemplateStorage();
+        settingsStorage = new SettingsStorage();
 
         initComponents();
         initMenuBar();
@@ -126,7 +129,9 @@ public class MainFrame extends JFrame {
         topPanel.add(new JLabel("URL:"), gbc);
 
         urlField = new JTextField();
-        urlField.setText("http://127.0.0.1:8080/invc-gw/invc-transfer-service/inner/data/query");
+        // 使用上次保存的URL，如果没有则使用默认值
+        String defaultUrl = "http://127.0.0.1:8080/invc-gw/invc-transfer-service/inner/data/query";
+        urlField.setText(settingsStorage.getLastUrl(defaultUrl));
         urlField.setHorizontalAlignment(JTextField.CENTER); // 文字居中
         urlField.setPreferredSize(new Dimension(0, 35));
         urlField.setFont(new Font(urlField.getFont().getName(), Font.PLAIN, 14));
@@ -248,6 +253,8 @@ public class MainFrame extends JFrame {
                     responsePanel.displayResponse(response);
                     historyStorage.addHistory(requestData, response);
                     historyPanel.refreshHistory();
+                    // 保存本次使用的URL
+                    settingsStorage.setLastUrl(requestData.getUrl());
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(MainFrame.this,
                         "请求失败: " + e.getMessage(),

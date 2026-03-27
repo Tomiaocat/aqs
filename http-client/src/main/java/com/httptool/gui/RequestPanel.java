@@ -121,7 +121,7 @@ public class RequestPanel extends JPanel {
 
         // 请求体密文面板
         JPanel cipherPanel = new JPanel(new BorderLayout());
-        cipherPanel.setBorder(BorderFactory.createTitledBorder("请求体密文 (Base64)"));
+        cipherPanel.setBorder(BorderFactory.createTitledBorder("请求体密文 (AES+Base64)"));
 
         encryptedBodyArea = new JTextArea(4, 40);
         encryptedBodyArea.setFont(new Font("Monospaced", Font.PLAIN, 12));

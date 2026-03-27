@@ -5,9 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.httptool.model.HttpResponseData;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.List;
 
 /**
  * 响应展示面板
@@ -18,6 +22,9 @@ public class ResponsePanel extends JPanel {
     private JTextArea plainTextArea;
     private JTree jsonTree;
     private JLabel statusLabel;
+    private JTable dataTable;
+    private DefaultTableModel dataTableModel;
+    private JLabel dataStatusLabel;
 
     public ResponsePanel() {
         setLayout(new BorderLayout(10, 10));
@@ -37,7 +44,7 @@ public class ResponsePanel extends JPanel {
         cipherTextArea.setLineWrap(true);
         cipherTextArea.setWrapStyleWord(true);
         JScrollPane cipherScroll = new JScrollPane(cipherTextArea);
-        tabbedPane.addTab("密文(Base64)", cipherScroll);
+        tabbedPane.addTab("密文(AES+Base64)", cipherScroll);
 
         // 明文标签页 - 带格式化按钮
         JPanel plainPanel = new JPanel(new BorderLayout());
@@ -58,6 +65,21 @@ public class ResponsePanel extends JPanel {
         plainPanel.add(formatPanel, BorderLayout.SOUTH);
 
         tabbedPane.addTab("明文(JSON)", plainPanel);
+
+        // 数据表格标签页
+        JPanel dataPanel = new JPanel(new BorderLayout());
+        dataStatusLabel = new JLabel("暂无数据");
+        dataStatusLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        dataPanel.add(dataStatusLabel, BorderLayout.NORTH);
+
+        dataTableModel = new DefaultTableModel();
+        dataTable = new JTable(dataTableModel);
+        dataTable.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        dataTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        JScrollPane dataScroll = new JScrollPane(dataTable);
+        dataPanel.add(dataScroll, BorderLayout.CENTER);
+
+        tabbedPane.addTab("数据", dataPanel);
 
         // JSON树标签页
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Response");
@@ -110,6 +132,8 @@ public class ResponsePanel extends JPanel {
             plainTextArea.setText(formatted);
             // 更新JSON树
             updateJsonTree(decryptedBody);
+            // 更新数据表格
+            updateDataTable(decryptedBody);
         } else {
             plainTextArea.setText("解密失败");
         }
@@ -229,6 +253,177 @@ public class ResponsePanel extends JPanel {
                 "JSON 格式错误: " + e.getMessage(),
                 "格式化失败",
                 JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * 更新数据表格，从JSON响应中提取data字段并以表格形式展示
+     */
+    private void updateDataTable(String json) {
+        dataTableModel.setRowCount(0);
+        dataTableModel.setColumnCount(0);
+
+        if (json == null || json.trim().isEmpty()) {
+            dataStatusLabel.setText("响应为空");
+            return;
+        }
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode rootNode = mapper.readTree(json);
+            JsonNode dataNode = rootNode.get("data");
+
+            if (dataNode == null) {
+                dataStatusLabel.setText("响应中未找到data字段");
+                return;
+            }
+
+            if (!dataNode.isArray()) {
+                dataStatusLabel.setText("data字段不是数组类型");
+                return;
+            }
+
+            if (dataNode.size() == 0) {
+                dataStatusLabel.setText("data数组为空");
+                return;
+            }
+
+            // 收集所有列名（从所有Map中合并）
+            Set<String> columns = new LinkedHashSet<>();
+            for (JsonNode row : dataNode) {
+                if (row.isObject()) {
+                    Iterator<String> fieldNames = row.fieldNames();
+                    while (fieldNames.hasNext()) {
+                        columns.add(fieldNames.next());
+                    }
+                }
+            }
+
+            if (columns.isEmpty()) {
+                dataStatusLabel.setText("data数组中没有对象数据");
+                return;
+            }
+
+            // 设置表头
+            List<String> columnList = new ArrayList<>(columns);
+            for (String col : columnList) {
+                dataTableModel.addColumn(col);
+            }
+
+            // 填充数据
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai"));
+
+            for (JsonNode row : dataNode) {
+                Object[] rowData = new Object[columnList.size()];
+                for (int i = 0; i < columnList.size(); i++) {
+                    String col = columnList.get(i);
+                    JsonNode value = row.get(col);
+                    rowData[i] = formatValue(value, dateFormat);
+                }
+                dataTableModel.addRow(rowData);
+            }
+
+            dataStatusLabel.setText("共 " + dataNode.size() + " 条记录");
+
+            // 自动调整列宽
+            autoResizeColumns(dataTable);
+
+        } catch (Exception e) {
+            dataStatusLabel.setText("解析失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 格式化单元格值，处理日期类型转换
+     */
+    private String formatValue(JsonNode value, SimpleDateFormat dateFormat) {
+        if (value == null || value.isNull()) {
+            return "";
+        }
+        if (value.isTextual()) {
+            String text = value.asText();
+            // 尝试解析日期字符串
+            Date parsedDate = tryParseDate(text);
+            if (parsedDate != null) {
+                return dateFormat.format(parsedDate);
+            }
+            return text;
+        }
+        if (value.isNumber()) {
+            long num = value.asLong();
+            // 判断是否为时间戳（2000-2100年范围内）
+            // 2000-01-01 = 946656000000L (毫秒)
+            // 2100-01-01 = 4102444800000L (毫秒)
+            if (num > 946656000000L && num < 4102444800000L) {
+                return dateFormat.format(new Date(num));
+            }
+            // 判断是否为Double/Float
+            if (value.isFloatingPointNumber()) {
+                return String.valueOf(value.asDouble());
+            }
+            return value.asText();
+        }
+        if (value.isBoolean()) {
+            return value.asText();
+        }
+        if (value.isObject() || value.isArray()) {
+            return value.toString();
+        }
+        return value.asText();
+    }
+
+    /**
+     * 尝试解析日期字符串
+     */
+    private Date tryParseDate(String text) {
+        if (text == null || text.isEmpty()) {
+            return null;
+        }
+
+        // 尝试多种日期格式
+        String[] patterns = {
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd",
+            "yyyy/MM/dd HH:mm:ss",
+            "yyyy/MM/dd"
+        };
+
+        for (String pattern : patterns) {
+            try {
+                SimpleDateFormat sdf = new SimpleDateFormat(pattern);
+                sdf.setLenient(false);
+                return sdf.parse(text);
+            } catch (ParseException e) {
+                // 继续尝试下一个格式
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 自动调整表格列宽以适应内容
+     */
+    private void autoResizeColumns(JTable table) {
+        for (int column = 0; column < table.getColumnCount(); column++) {
+            int width = 100; // 最小宽度
+            for (int row = 0; row < table.getRowCount(); row++) {
+                Object value = table.getValueAt(row, column);
+                if (value != null) {
+                    int cellWidth = value.toString().length() * 8 + 20; // 估算宽度
+                    width = Math.max(width, cellWidth);
+                }
+            }
+            // 限制最大宽度
+            width = Math.min(width, 400);
+            // 考虑表头宽度
+            String header = table.getColumnName(column);
+            int headerWidth = header.length() * 8 + 30;
+            width = Math.max(width, headerWidth);
+
+            table.getColumnModel().getColumn(column).setPreferredWidth(width);
         }
     }
 }

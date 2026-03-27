@@ -15,8 +15,8 @@ public class HeaderInputRow extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
 
-        nameField = new JTextField(name, 15);
-        valueField = new JTextField(value, 25);
+        nameField = new JTextField(name, 8);
+        valueField = new JTextField(value, 20);
         deleteButton = new JButton("X");
         deleteButton.setPreferredSize(new Dimension(40, 25));
         deleteButton.setMargin(new Insets(0, 0, 0, 0));
